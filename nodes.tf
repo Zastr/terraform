@@ -16,13 +16,13 @@ data "aws_ami" "centos" {
     values = ["hvm"]
   }
 
-  owners = ["679593333241"] # Canonical
+  owners = ["679593333241"] # CentOS
 }
 
 
 resource "aws_instance" "docker_host_1" {
   ami           = "${data.aws_ami.centos.id}"
-  instance_type = "t2.micro"
+  instance_type = "t2.medium"
 
   root_block_device {
     volume_size = 16
@@ -39,4 +39,14 @@ resource "aws_key_pair" "ssh" {
 resource "aws_eip" "ip" {
   vpc = true
   instance = aws_instance.docker_host_1.id
+}
+
+module "ansible_provisioner" {
+  source    = "github.com/cloudposse/tf_ansible"
+
+  arguments = ["--user=centos"]
+  envs      = ["host=${aws_instance.docker_host_1.public_ip}"]
+  playbook  = "/home/zesty/ansible/playbooks/provision_docker_hosts.yml"
+  dry_run   = false
+
 }
