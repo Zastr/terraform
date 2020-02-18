@@ -31,6 +31,39 @@ resource "aws_instance" "docker_host_1" {
   key_name = "ssh-key"
 }
 
+resource "aws_instance" "docker_host_2" {
+  ami           = "${data.aws_ami.centos.id}"
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_size = 16
+  }
+
+  key_name = "ssh-key"
+}
+
+resource "aws_instance" "docker_host_3" {
+  ami           = "${data.aws_ami.centos.id}"
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_size = 16
+  }
+
+  key_name = "ssh-key"
+}
+
+resource "aws_instance" "docker_host_4" {
+  ami           = "${data.aws_ami.centos.id}"
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_size = 16
+  }
+
+  key_name = "ssh-key"
+}
+
 resource "aws_key_pair" "ssh" {
   key_name   = "ssh-key"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDLe2ZLi8HGqGi6LC1XsdD7G7Ja85aboH4d/2XUpM664AQvz3e4YkfY/kI4UgXXgWRXApIRjhLO2xKaXYWmIvzjfxcZ5GlB2BwNwdEdiGFAUMU9Ia5D0Ui8nZvZvmPZ9ukQ57+HHLVg8lPd4tgC8DxhrfMk9FU7nTG1bTWEzQP0vn84GTYR42JjzfURBkoKBMYGp2cgpzWD9/KWj86HwBxICuATJxkQ7XhIq6W2SKCjetyBKRRyN6oBdqo1ZfbRvgNHUksu8nxy+suFuOrMhfxDHYhHAZUxnYKd5oIsjY5fDs2PhKldKzScbBbWvHSDHS9D24Khm93ouCyXFc8DW5oZ zesty@FORTKICKASSLITE"
@@ -41,6 +74,22 @@ resource "aws_eip" "ip" {
   instance = aws_instance.docker_host_1.id
 }
 
+resource "aws_eip" "ip2" {
+  vpc = true
+  instance = aws_instance.docker_host_2.id
+}
+
+resource "aws_eip" "ip3" {
+  vpc = true
+  instance = aws_instance.docker_host_3.id
+}
+
+resource "aws_eip" "ip4" {
+  vpc = true
+  instance = aws_instance.docker_host_4.id
+}
+
+/*
 module "ansible_provisioner" {
   source    = "github.com/cloudposse/tf_ansible"
 
@@ -50,3 +99,4 @@ module "ansible_provisioner" {
   dry_run   = false
 
 }
+*/
