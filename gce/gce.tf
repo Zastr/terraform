@@ -1,5 +1,12 @@
 #networks
 
+provider "google" {
+    credentials = "${file("~/.config/gcloud/gce_tf.json")}"
+    project = "gce-rke-cluster"
+    region = "us-east1"
+    zone = "us-east1-c"
+}
+
 resource "google_compute_network" "gce_vpc" {
   name = "gce-vpc"
   description = "GCE Kubernetes VPC"
@@ -9,7 +16,7 @@ resource "google_compute_network" "gce_vpc" {
 resource "google_compute_subnetwork" "gce_vpc_subnet" {
     name = "gce-subnet"
     ip_cidr_range = "10.240.0.0/24"
-    region = "us-east1-c"
+    region = "us-east1"
     network = google_compute_network.gce_vpc.self_link
 }
 
@@ -43,24 +50,51 @@ resource "google_compute_firewall" "gce_firewall_external" {
         protocol = "tcp"
         ports = ["22","6443"]
     }
-    source_ranges = "0.0.0.0/0"
+    source_ranges = ["0.0.0.0/0"]
 }
 
 resource "google_compute_address" "gce_address" {
     name = "gce-address"
-    region = "us-east1-c"
+    region = "us-east1"
 }
 
 # compute
 
-resource "google_compute_instance" "master_1 {
+resource "google_compute_instance" "master_1" {
     name = "master-1"
     machine_type = "n1-standard-1"
-    zone = "us-east-1c"
+    zone = "us-east1-c"
 
     boot_disk {
         initialize_params {
-            image = "ubuntu-1804-lts/ubuntu-os-cloud"
+            image = "ubuntu-1804-bionic-v20200218"
+            size = 40
+        }
+    }
+
+    can_ip_forward = true
+
+    tags = ["kubernetes", "controller"]
+
+    network_interface {
+        network = google_compute_network.gce_vpc.self_link
+        network_ip = "10.240.0.11"
+        subnetwork = google_compute_subnetwork.gce_vpc_subnet.self_link
+    }
+
+    service_account {
+        scopes = ["compute-rw", "storage-ro", "service-management", "service-control", "logging-write", "monitoring"]
+    }
+}
+
+resource "google_compute_instance" "worker_1" {
+    name = "worker-1"
+    machine_type = "n1-standard-1"
+    zone = "us-east1-c"
+
+    boot_disk {
+        initialize_params {
+            image = "ubuntu-1804-bionic-v20200218"
             size = 40
         }
     }
@@ -71,10 +105,10 @@ resource "google_compute_instance" "master_1 {
 
     can_ip_forward = true
 
-    tags = ["kubernetes", "controller"]
+    tags = ["kubernetes", "worker"]
 
     network_interface {
-        network = "google_compute_network.gce_vpc.self_link"
+        network = google_compute_network.gce_vpc.self_link
         network_ip = "10.240.0.21"
         subnetwork = google_compute_subnetwork.gce_vpc_subnet.self_link
     }
