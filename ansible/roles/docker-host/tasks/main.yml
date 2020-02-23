@@ -1,0 +1,76 @@
+---
+- name: Initial Update
+  yum:
+    name: '*'
+    state: latest
+  become: true
+
+- name: Remove all existing docker packages
+  yum: 
+    name: "{{ item }}"
+    state: absent
+  loop: 
+    - docker*
+  become: true
+
+- name: Add docker repository
+  yum_repository: 
+    name: docker-ce
+    description: Docker CE
+    baseurl: "https://download.docker.com/linux/centos/7/$basearch/stable"
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: "https://download.docker.com/linux/centos/gpg"
+  become: true
+
+- name: Initial Update
+  yum:
+    name: '*'
+    state: latest
+  become: true
+
+- name: Install docker-ce
+  yum: 
+    name: docker-ce
+    state: latest
+  become: yes
+
+- name: Enable docker 
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+
+
+- name: Download RKE from github
+  get_url:
+    url: https://github.com/rancher/rke/releases/download/v0.3.2/rke_linux-amd64
+    dest: /usr/bin/rke
+    mode: 755
+  become: yes
+
+- name: Download kubectl from google
+  get_url:
+    url: https://storage.googleapis.com/kubernetes-release/release/v1.16.0/bin/linux/amd64/kubectl
+    dest: /usr/bin/kubectl
+    mode: 755
+  become: yes
+
+- name: Generate ssh keys 
+  openssh_keypair:
+    path: /home/centos/.ssh/id_rsa
+
+- name: Add authorized keys
+  authorized_key:
+    user: centos
+    state: present
+    key: '{{ item }}'
+  with_file:
+    - /home/centos/.ssh/id_rsa
+
+- name: add user to docker group
+  user:
+    name: "centos"
+    group: docker
+  become: yes
