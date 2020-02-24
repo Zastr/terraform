@@ -15,7 +15,7 @@ gcloud compute config-ssh --ssh-key-file=~/.ssh/id_rsa
 
 # ansible run
 echo -e "${PURPLE}Baselining nodes... \n"
-ansible-playbook playbooks/provision_docker_hosts.yml -i inventory/  --key-file ~/.ssh/google_compute_engine
+ansible-playbook ansible/playbooks/provision_docker_hosts.yml -i inventory/  --key-file ~/.ssh/google_compute_engine
 
 #rke up 
 echo -e "${PURPLE}RKE Cluster Deploying... \n"
