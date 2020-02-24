@@ -174,3 +174,21 @@ resource "google_compute_instance" "worker_1" {
         scopes = ["compute-rw", "storage-ro", "service-management", "service-control", "logging-write", "monitoring"]
     }
 }
+
+# output
+output "out_worker_1_private_ip" {
+    value = google_compute_instance.worker_1.network_interface.0.network_ip
+}
+
+output "out_worker_1_public_ip" {
+    value = google_compute_instance.worker_1.network_interface.0.access_config.0.nat_ip
+}
+
+output "out_master_1_private_ip" {
+    value = google_compute_instance.master_1.network_interface.0.network_ip
+}
+
+output "out_master_1_public_ip" {
+    value = google_compute_instance.master_1.network_interface.0.access_config.0.nat_ip
+}
+

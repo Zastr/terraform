@@ -1,0 +1,61 @@
+---
+- name: Initial Update
+  apt:
+    name: '*'
+    state: latest
+  become: true
+
+- name: Remove all existing docker packages
+  apt: 
+    name: "{{ item }}"
+    state: absent
+  loop: 
+    - docker*
+  become: true
+
+- name: Add docker repository
+  apt_repository: 
+    repo: deb http://download.docker.com/linux/ubuntu bionic stable
+    state: present
+  become: true
+
+- name: Initial Update
+  yum:
+    name: '*'
+    state: latest
+  become: true
+
+- name: Install docker-ce
+  apt: 
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+  become: yes
+
+- name: Enable docker 
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+
+#- name: Generate ssh keys 
+#  openssh_keypair:
+#    path: /home/centos/.ssh/id_rsa
+
+#- name: Add authorized keys
+#  authorized_key:
+#    user: centos
+#    state: present
+#    key: '{{ item }}'
+#  with_file:
+#    - /home/centos/.ssh/id_rsa
+
+- name: add user to docker group
+  user:
+    name: "{{ lookup('env','USER') }}"
+    group: docker
+  become: yes

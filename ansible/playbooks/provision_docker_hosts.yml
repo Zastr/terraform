@@ -1,14 +1,14 @@
 ---
-- hosts: localhost
-  gather_facts: True
-  check_mode: no
-  tasks:
-  - name: Add public ip addresses to an dynamic inventory
-    add_host:
-      name: "{{ host }}"
-      groups: all
-
-  - local_action: wait_for port=22 host="{{ host }}" search_regex=OpenSSH delay=10
+#- hosts: all
+#  gather_facts: True
+#  check_mode: no
+#  tasks:
+#  - name: Add public ip addresses to an dynamic inventory
+#    add_host:
+#      name: "{{ host }}"
+#      groups: all
+#
+#  - local_action: wait_for port=22 host="{{ host }}" search_regex=OpenSSH delay=10
 
 
 - hosts: all
