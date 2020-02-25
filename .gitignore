@@ -1,5 +1,6 @@
 *.tfstate*
 *.rkestate
 kube_config_rancher-cluster.yaml
+rancher-cluster.yaml
 .terraform/*
 ansible/inventory/*
