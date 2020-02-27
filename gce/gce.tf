@@ -71,17 +71,31 @@ resource "google_compute_firewall" "rke_allow_health_check" {
     allow {
         protocol = "tcp"
     }
+    #google pools
     source_ranges = ["209.85.152.0/22","209.85.204.0/22","35.191.0.0/16"]
 }
 
 # forwarding
 
-resource "google_compute_forwarding_rule" "rke-forward" {
+resource "google_compute_forwarding_rule" "rke-api-forward" {
     name = "rke-forward"
+    #port_range = "6443"
+    port_range = "1-65535"
     ip_address = data.google_compute_address.gce_address_ip.address
-    port_range = "6443"
     target = google_compute_target_pool.rke_target_pool.self_link
 }
+
+
+data "google_compute_forwarding_rule" "rke-forward-data" {
+  name = "rke-forward"
+}
+
+#resource "google_compute_forwarding_rule" "rke-https-forward" {
+#    name = "rke-forward"
+#    ip_address = data.google_compute_address.gce_address_ip.address
+#    port_range = "443"
+#    target = google_compute_target_pool.rke_target_pool.self_link
+#}
 
 # load balance
 
@@ -175,6 +189,32 @@ resource "google_compute_instance" "worker_1" {
     }
 }
 
+# DNS 
+
+resource "google_dns_managed_zone" "rke-cluster" {
+  name        = "rke-cluster"
+  dns_name    = "rke.cluster."
+  description = "Internal DNS name"
+
+  visibility = "private"
+
+  private_visibility_config {
+    networks {
+      network_url = google_compute_network.gce_vpc.self_link
+    }
+  }
+}
+
+resource "google_dns_record_set" "a" {
+  name         = "${google_dns_managed_zone.rke-cluster.dns_name}"
+  managed_zone = google_dns_managed_zone.rke-cluster.name
+  type         = "A"
+  ttl          = 300
+
+  rrdatas = [google_compute_forwarding_rule.rke-api-forward.ip_address]
+}
+
+
 # output
 output "out_worker_1_private_ip" {
     value = google_compute_instance.worker_1.network_interface.0.network_ip
@@ -190,5 +230,9 @@ output "out_master_1_private_ip" {
 
 output "out_master_1_public_ip" {
     value = google_compute_instance.master_1.network_interface.0.access_config.0.nat_ip
+}
+
+output "out_loadbalancer_ip" {
+    value = data.google_compute_forwarding_rule.rke-forward-data.ip_address
 }
 

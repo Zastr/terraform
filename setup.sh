@@ -46,3 +46,41 @@ ingress:
     use-forwarded-headers: "true"
 EOF
 rke up --config rke/rancher-cluster.yaml
+
+export KUBECONFIG="$PWD/rke/kube_config_rancher-cluster.yaml"
+
+# install rancher (from rancher's docs)
+
+echo -e "${PURPLE}Installing Rancher... \n"
+helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+kubectl create namespace cattle-system
+
+kubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.12/deploy/manifests/00-crds.yaml
+kubectl create namespace cert-manager
+
+
+
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+helm install \
+  cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --version v0.12.0
+
+kubectl -n cert-manager wait --for=condition=available deployment/cert-manager --timeout 3m
+
+helm install rancher rancher-latest/rancher \
+  --namespace cattle-system \
+  --set hostname=rke.cluster
+
+kubectl -n cattle-system wait --for=condition=available deployment/rancher --timeout 3m
+
+# linkerd install
+echo -e "${PURPLE}LinkerD... \n"
+
+linkerd install | kubectl apply -f -
+
+echo -e "${PURPLE}Done!"
+echo -e "${PURPLE}Edit your hosts file to point rke.cluster to $(terraform output | grep loadbalancer | cut -d '=' -f 2 | sed 's/^ *//g')"
+
+echo -e "${PURPLE}Verify Linkerd install by running 'linkerd dashboard &'"

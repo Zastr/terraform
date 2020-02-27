@@ -3,6 +3,7 @@
   apt:
     name: '*'
     state: latest
+    update_cache: yes
   become: true
 
 - name: Remove all existing docker packages
@@ -28,9 +29,10 @@
   become: true
 
 - name: Update for docker packages
-  yum:
+  apt:
     name: '*'
     state: latest
+    update_cache: yes
   become: true
 
 - name: Install docker-ce
