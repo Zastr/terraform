@@ -69,6 +69,9 @@ helm install \
 
 kubectl -n cert-manager wait --for=condition=available deployment/cert-manager --timeout 3m
 
+#this seems to help make the rancher deployment work the first time
+sleep 20
+
 helm install rancher rancher-latest/rancher \
   --namespace cattle-system \
   --set hostname=rke.cluster
