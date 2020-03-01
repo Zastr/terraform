@@ -25,9 +25,9 @@ resource "google_compute_address" "gce_address" {
     region = "us-east1"
 }
 
-data "google_compute_address" "gce_address_ip" {
-    name = "gce-address"
-}
+#data "google_compute_address" "gce_address_ip" {
+#    name = "gce-address"
+#}
 
 # firewall
 
@@ -59,7 +59,7 @@ resource "google_compute_firewall" "gce_firewall_external" {
 
     allow {
         protocol = "tcp"
-        ports = ["22","6443"]
+        ports = ["22", "443", "6443"]
     }
     source_ranges = ["0.0.0.0/0"]
 }
@@ -81,14 +81,12 @@ resource "google_compute_forwarding_rule" "rke-api-forward" {
     name = "rke-forward"
     #port_range = "6443"
     port_range = "1-65535"
-    ip_address = data.google_compute_address.gce_address_ip.address
+    ip_address = google_compute_address.gce_address.address
     target = google_compute_target_pool.rke_target_pool.self_link
+
+    depends_on = [google_compute_address.gce_address]
 }
 
-
-data "google_compute_forwarding_rule" "rke-forward-data" {
-  name = "rke-forward"
-}
 
 #resource "google_compute_forwarding_rule" "rke-https-forward" {
 #    name = "rke-forward"
@@ -212,6 +210,8 @@ resource "google_dns_record_set" "a" {
   ttl          = 300
 
   rrdatas = [google_compute_forwarding_rule.rke-api-forward.ip_address]
+
+  depends_on = [google_compute_forwarding_rule.rke-api-forward]
 }
 
 
@@ -233,6 +233,6 @@ output "out_master_1_public_ip" {
 }
 
 output "out_loadbalancer_ip" {
-    value = data.google_compute_forwarding_rule.rke-forward-data.ip_address
+    value = google_compute_forwarding_rule.rke-api-forward.ip_address
 }
 
